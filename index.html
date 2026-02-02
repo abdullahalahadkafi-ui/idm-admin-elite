@@ -3,67 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDM Admin Elite | শিক্ষক পোর্টাল</title>
-    <link rel="icon" href="red-favicon.png"> <!-- লাল লোগো -->
-    <link rel="manifest" href="admin-manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;700&display=swap" rel="stylesheet">
+    <title>IDM Admin Elite | প্রফেশনাল লগইন</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        :root { --admin-red: #b91c1c; --dark: #0f172a; }
-        body { font-family: 'Hind Siliguri', sans-serif; background: var(--dark); color: white; text-align: center; padding-top: 100px; }
-        .auth-card { background: rgba(255,255,255,0.05); padding: 50px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); max-width: 450px; margin: auto; }
-        .btn-google { background: white; color: #000; padding: 15px 30px; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 10px; margin: 30px auto; }
-        #status-msg { color: #f87171; font-weight: bold; margin-top: 20px; }
+        :root { --admin-red: #b91c1c; --dark: #0a0c10; --card: #161b22; }
+        body { 
+            font-family: 'Hind Siliguri', sans-serif; background: var(--dark); color: white; 
+            display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;
+        }
+        .auth-card { 
+            background: var(--card); padding: 50px 30px; border-radius: 20px; 
+            border: 1px solid rgba(185, 28, 28, 0.3); max-width: 450px; width: 90%; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .btn-google { 
+            background: white; color: #000; padding: 14px 25px; border-radius: 50px; 
+            border: none; cursor: pointer; font-weight: bold; display: flex; 
+            align-items: center; justify-content: center; gap: 10px; margin: 30px auto;
+            width: 100%; transition: 0.3s;
+        }
+        .btn-google:hover { background: #f1f1f1; transform: scale(1.02); }
+        #status-msg { color: #f87171; font-weight: bold; font-size: 14px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <div class="auth-card">
         <i class="fas fa-user-shield fa-4x" style="color: var(--admin-red);"></i>
-        <h2 style="margin-top: 20px;">IDM Admin Elite</h2>
-        <p>শুধুমাত্র শিক্ষকদের জন্য সংরক্ষিত পোর্টাল</p>
+        <h2 style="margin-top: 20px; font-family: 'Orbitron'; letter-spacing: 2px;">IDM ADMIN ELITE</h2>
+        <p style="color: #8b949e;">শুধুমাত্র শিক্ষকদের জন্য সংরক্ষিত পোর্টাল</p>
 
-        <div id="login-section">
-            <button class="btn-google" onclick="login()">
-                <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20">
-                গুগল দিয়ে প্রবেশ করুন
-            </button>
-        </div>
+        <button class="btn-google" id="loginBtn">
+            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20">
+            গুগল দিয়ে প্রবেশ করুন
+        </button>
 
         <div id="status-msg"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = { /* তোমার কনফিগ */ };
+        // ১. তোমার ফায়ারবেস কনফিগ (নতুন করে গুগল এআই স্টুডিও বা ফায়ারবেস থেকে নেওয়া এপিআই কী বসাও)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTxt82Z4KRW425eYAU-WkVJbmUu1Vcy58", // যদি এটি কাজ না করে, নতুন কী জেনারেট করে এখানে বসাও
+            authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+            projectId: "ispahani-madrasah-portal",
+            storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+            messagingSenderId: "501627545319",
+            appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        window.login = () => {
-            signInWithPopup(auth, provider).then(async (res) => {
-                const user = res.user;
+        // ২. লগইন ফাংশন লজিক
+        async function handleLogin() {
+            const status = document.getElementById('status-msg');
+            status.innerText = "প্রসেসিং হচ্ছে...";
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                
+                // ৩. ডাটাবেজে ইউজার স্ট্যাটাস চেক করা
                 const userRef = doc(db, "admin_users", user.uid);
                 const snap = await getDoc(userRef);
 
                 if (!snap.exists()) {
-                    // প্রথমবার লগইন করলে ফর্ম পেজে পাঠাবে
+                    // প্রথমবার হলে রেজিস্ট্রেশন ফর্মে পাঠাবে
                     window.location.href = "teacher-onboarding.html";
                 } else {
-                    const data = snap.data();
-                    if (data.status === "approved") {
-                        window.location.href = "dashboard.html";
+                    const userData = snap.data();
+                    if (userData.status === "approved") {
+                        alert("স্বাগতম স্যার! আপনি অনুমোদিত।");
+                        window.location.href = "dashboard.html"; // আসল অ্যাডমিন ড্যাশবোর্ড
                     } else {
-                        document.getElementById('status-msg').innerText = "আপনার অ্যাকাউন্টটি এখনো অনুমোদনের অপেক্ষায় আছে।";
+                        status.innerText = "আপনার অ্যাকাউন্টটি এখনো সুপারের অনুমোদনের অপেক্ষায় আছে।";
+                        await auth.signOut();
                     }
                 }
-            });
-        };
+            } catch (error) {
+                console.error(error);
+                status.innerText = "লগইন ব্যর্থ! এরর: " + error.message;
+            }
+        }
+
+        // বাটন কানেক্ট করা
+        document.getElementById('loginBtn').onclick = handleLogin;
     </script>
 </body>
 </html>
