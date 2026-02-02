@@ -2,50 +2,113 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>শিক্ষক প্রোফাইল আপডেট</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>শিক্ষক প্রোফাইল আপডেট | IDM Admin Elite</title>
+    
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        body { font-family: 'Hind Siliguri', sans-serif; background: #f1f5f9; padding: 20px; }
-        .card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; }
-        .btn { background: #b91c1c; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        :root { --admin-red: #b91c1c; --bg: #f1f5f9; --white: #ffffff; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: var(--white); padding: 40px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); width: 90%; max-width: 500px; text-align: center; }
+        .card h2 { color: #111; margin-bottom: 10px; font-weight: 800; }
+        .form-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
+        input { width: 100%; padding: 14px; border: 2px solid #f1f5f9; border-radius: 12px; outline: none; font-size: 16px; font-family: inherit; }
+        input:focus { border-color: var(--admin-red); }
+        .btn-submit { background: var(--admin-red); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px; transition: 0.3s; }
+        .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(185, 28, 28, 0.2); }
     </style>
 </head>
 <body>
+
     <div class="card">
         <h2>শিক্ষক তথ্য ফর্ম</h2>
-        <p>আপনার অ্যাকাউন্ট সক্রিয় করতে তথ্যগুলো দিন।</p>
-        <input type="text" id="tName" placeholder="আপনার পূর্ণ নাম">
-        <input type="text" id="tPos" placeholder="পদবী (যেমন: সহকারী মৌলভী)">
-        <input type="tel" id="tPhone" placeholder="মোবাইল নম্বর">
-        <button class="btn" onclick="submitRequest()">আবেদন জমা দিন</button>
+        <p style="color: #666; margin-bottom: 25px;">আপনার অ্যাকাউন্ট সক্রিয় করতে নিচের তথ্যগুলো দিন।</p>
+        
+        <div class="form-group">
+            <label>আপনার পূর্ণ নাম</label>
+            <input type="text" id="tName" placeholder="উদা: আব্দুল হামিদ">
+        </div>
+        <div class="form-group">
+            <label>পদবী</label>
+            <input type="text" id="tPos" placeholder="উদা: সুপারিনটেনডেন্ট">
+        </div>
+        <div class="form-group">
+            <label>মোবাইল নম্বর</label>
+            <input type="tel" id="tPhone" placeholder="০১৮XXXXXXXX">
+        </div>
+
+        <button class="btn-submit" id="submitBtn">আবেদন জমা দিন</button>
+        <p id="status" style="margin-top:15px; font-size:13px; font-weight:bold;"></p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = { /* তোমার কনফিগ */ };
+        // ১. তোমার নতুন এপিআই কী সহ কনফিগ
+        const firebaseConfig = {
+            apiKey: "AIzaSyAT-lcLWb8A9iWJZI77-TJifcjabjSBahU", // এখানে তোমার নতুন কী-টি নিশ্চিত করো
+            authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+            projectId: "ispahani-madrasah-portal",
+            storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+            messagingSenderId: "501627545319",
+            appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.submitRequest = async () => {
-            const user = auth.currentUser;
-            const data = {
-                uid: user.uid,
-                name: document.getElementById('tName').value,
-                email: user.email,
-                designation: document.getElementById('tPos').value,
-                phone: document.getElementById('tPhone').value,
-                status: "pending", // শুরুর দিকে পেন্ডিং থাকবে
-                joined: new Date()
-            };
-            await setDoc(doc(db, "admin_users", user.uid), data);
-            alert("আপনার আবেদনটি সুপারের কাছে পাঠানো হয়েছে। অনুমোদন পেলে আপনি ড্যাশবোর্ড ব্যবহার করতে পারবেন।");
-            window.location.href = "index.html"; // ব্যাক টু লগইন পেজ
+        // ২. ফর্ম সাবমিট ফাংশন
+        async function submitRequest() {
+            const name = document.getElementById('tName').value.trim();
+            const pos = document.getElementById('tPos').value.trim();
+            const phone = document.getElementById('tPhone').value.trim();
+            const statusBox = document.getElementById('status');
+
+            if (!name || !pos || !phone) {
+                alert("সবগুলো তথ্য সঠিকভাবে দিন!");
+                return;
+            }
+
+            statusBox.style.color = "blue";
+            statusBox.innerText = "আবেদন জমা হচ্ছে...";
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    try {
+                        // ৩. ডাটাবেজে admin_users কালেকশনে তথ্য সেভ করা
+                        await setDoc(doc(db, "admin_users", user.uid), {
+                            uid: user.uid,
+                            name: name,
+                            email: user.email,
+                            designation: pos,
+                            phone: phone,
+                            status: "pending", // সুপারের অনুমোদনের জন্য পেন্ডিং থাকবে
+                            timestamp: serverTimestamp()
+                        });
+
+                        alert("সাফল্য! আপনার আবেদনটি সুপারের কাছে পাঠানো হয়েছে। অনুমোদন পেলে আপনি ড্যাশবোর্ড ব্যবহার করতে পারবেন।");
+                        window.location.href = "index.html"; // লগইন পেজে ফেরত যাবে
+                    } catch (error) {
+                        console.error(error);
+                        statusBox.style.color = "red";
+                        statusBox.innerText = "এরর: " + error.message;
+                    }
+                } else {
+                    alert("দয়া করে আগে লগইন করুন!");
+                    window.location.href = "index.html";
+                }
+            });
         }
+
+        // বাটন ক্লিক ইভেন্ট কানেক্ট করা (Hacker Style)
+        document.getElementById('submitBtn').onclick = submitRequest;
     </script>
 </body>
 </html>
