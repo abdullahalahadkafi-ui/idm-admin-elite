@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>IDM AI - ট্রেনিং সেন্টার</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --p: #006a4e; --bg: #f8fafc; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); padding: 40px 20px; text-align: center; }
+        .card { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);}
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input, textarea { width: 95%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; outline: none; font-family: inherit; }
+        .btn-save { background: var(--p); color: white; padding: 15px; width: 100%; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2 style="color:var(--p); margin-bottom: 20px;">IDM AI ট্রেনিং প্যানেল</h2>
+        <p style="font-size: 13px; color: #666; margin-bottom: 25px;">এখানে আপনি এআই-কে নতুন তথ্য শিখাতে পারেন।</p>
+        
+        <div class="input-group">
+            <label>বিষয় / টপিক</label>
+            <input type="text" id="topic" placeholder="যেমন: মাদ্রাসার ফি">
+        </div>
+
+        <div class="input-group">
+            <label>কিওয়ার্ডসমূহ (কমা দিয়ে লিখুন)</label>
+            <input type="text" id="keywords" placeholder="যেমন: টাকা, বেতন, ফি, খরচ, কত">
+        </div>
+
+        <div class="input-group">
+            <label>এআই কী উত্তর দিবে?</label>
+            <textarea id="answer" rows="4" placeholder="বিস্তারিত উত্তরটি এখানে লিখুন..."></textarea>
+        </div>
+
+        <button class="btn-save" onclick="trainAI()" style="font-family: 'Hind Siliguri', sans-serif;">ডাটাবেজে সেভ করুন</button>
+    </div>
+
+   <script type="module">
+    // ১. Firebase লাইব্রেরি ইমপোর্ট করা
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // ২. তোমার অরিজিনাল ফায়ারবেস কনফিগ (এটি একদম সঠিক হতে হবে)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCTxt82Z4KRW425eYAU-WkVJbmUu1Vcy58",
+        authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+        projectId: "ispahani-madrasah-portal",
+        storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+        messagingSenderId: "501627545319",
+        appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+    };
+
+    // ৩. কানেকশন শুরু
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ৪. ট্রেনিং ফাংশন (উইন্ডো অবজেক্টে দেওয়া হলো যাতে HTML বাটন একে খুঁজে পায়)
+    window.trainAI = async function() {
+        console.log("Saving process started..."); // ব্রাউজার কন্সোলে চেক করার জন্য
+        
+        const topic = document.getElementById('topic').value;
+        const keywordsInput = document.getElementById('keywords').value;
+        const answer = document.getElementById('answer').value;
+
+        // ভ্যালিডেশন চেক
+        if(!topic || !keywordsInput || !answer) {
+            alert("দয়া করে সবগুলো ঘর পূরণ করুন!");
+            return;
+        }
+
+        // কিওয়ার্ডগুলোকে কমা দিয়ে আলাদা করে লিস্ট বানানো
+        const keywordsArray = keywordsInput.toLowerCase().split(',').map(k => k.trim());
+
+        try {
+            // ৫. ডাটাবেজের 'ai_brain' নামক ফোল্ডারে (Collection) তথ্য পাঠানো
+            const docRef = await addDoc(collection(db, "ai_brain"), {
+                topic: topic,
+                keywords: keywordsArray,
+                answer: answer,
+                time: serverTimestamp()
+            });
+            
+            console.log("Document written with ID: ", docRef.id);
+            alert("সাফল্য! এআই এখন '" + topic + "' সম্পর্কে শিখে নিয়েছে। ✅");
+            
+            // ইনপুট বক্স পরিষ্কার করা
+            document.getElementById('topic').value = "";
+            document.getElementById('keywords').value = "";
+            document.getElementById('answer').value = "";
+            
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            alert("দুঃখিত! ডাটা সেভ হয়নি। কন্সোল (F12) চেক করুন। এরর: " + e.message);
+        }
+    }
+</script>
+</body>
+</html>

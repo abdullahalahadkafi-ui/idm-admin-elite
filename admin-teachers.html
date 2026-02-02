@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>শিক্ষক তথ্য আপডেট | ইস্পাহানি দাখিল মাদ্রাসা</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #006a4e;
+            --white: #ffffff;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: var(--bg); color: #334155; padding: 20px; }
+
+        .container { max-width: 800px; margin: auto; }
+        
+        .admin-card { 
+            background: var(--white); padding: 30px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+        .admin-card h2 { color: var(--primary); margin-bottom: 25px; text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #64748b; }
+        input, select { width: 100%; padding: 12px; border: 1.5px solid #f1f5f9; border-radius: 10px; outline: none; font-family: inherit; font-size: 15px; }
+        input:focus { border-color: var(--primary); background: #f0f7f4; }
+
+        .btn-save { background: var(--primary); color: white; padding: 16px; border: none; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.3s; font-size: 17px; margin-top: 10px; }
+        .btn-save:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 106, 78, 0.2); }
+
+        /* Current Teachers List Preview */
+        .list-card { background: white; padding: 20px; border-radius: 15px; border: 1px solid #ddd; }
+        .teacher-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .teacher-item b { color: var(--primary); }
+
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Input Form -->
+        <div class="admin-card">
+            <h2><i class="fas fa-user-plus"></i> নতুন শিক্ষক যোগ করুন</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>শিক্ষকের পূর্ণ নাম</label>
+                    <input type="text" id="tName" placeholder="উদা: মাওলানা আব্দুল হাই">
+                </div>
+                <div class="form-group">
+                    <label>পদবী</label>
+                    <input type="text" id="tPos" placeholder="উদা: সহকারী মৌলভী">
+                </div>
+                <div class="form-group">
+                    <label>মোবাইল নম্বর</label>
+                    <input type="text" id="tPhone" placeholder="০১৮XXXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>রক্তের গ্রুপ</label>
+                    <select id="tBlood">
+                        <option value="অজানা">সিলেক্ট করুন</option>
+                        <option>A+</option><option>A-</option>
+                        <option>B+</option><option>B-</option>
+                        <option>O+</option><option>O-</option>
+                        <option>AB+</option><option>AB-</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>যোগদানের তারিখ</label>
+                    <input type="date" id="tDate">
+                </div>
+                <div class="form-group">
+                    <label>ছবির লিঙ্ক (URL)</label>
+                    <input type="text" id="tImg" placeholder="https://imgur.com/image.jpg">
+                </div>
+            </div>
+            <button class="btn-save" onclick="saveTeacher()">তথ্য ডাটাবেজে সেভ করুন</button>
+        </div>
+
+        <!-- Live Preview List -->
+        <div class="list-card">
+            <h3 style="margin-bottom:15px; font-size:16px;"><i class="fas fa-list"></i> বর্তমানে যুক্ত থাকা শিক্ষকগণ:</h3>
+            <div id="current-list">লোড হচ্ছে...</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // তোমার ফায়ারবেস কনফিগ (হুবহু আগেরটিই থাকবে)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTxt82Z4KRW425eYAU-WkVJbmUu1Vcy58",
+            authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+            projectId: "ispahani-madrasah-portal",
+            storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+            messagingSenderId: "501627545319",
+            appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ১. শিক্ষক সেভ করার ফাংশন
+        window.saveTeacher = async function() {
+            const name = document.getElementById('tName').value;
+            const pos = document.getElementById('tPos').value;
+            const phone = document.getElementById('tPhone').value;
+            const blood = document.getElementById('tBlood').value;
+            const date = document.getElementById('tDate').value;
+            const img = document.getElementById('tImg').value;
+
+            if(!name || !pos) { alert("নাম ও পদবী অবশ্যই দিন!"); return; }
+
+            try {
+                await addDoc(collection(db, "teachers"), {
+                    name: name,
+                    designation: pos,
+                    phone: phone,
+                    blood: blood,
+                    joinDate: date,
+                    photoUrl: img,
+                    order: Date.now() // ক্রমানুসারে দেখানোর জন্য
+                });
+                alert("সাফল্য! শিক্ষক তথ্য সেভ হয়েছে।");
+                location.reload(); // পেজ রিফ্রেশ করে লিস্ট আপডেট করবে
+            } catch (e) {
+                alert("এরর: " + e.message);
+            }
+        }
+
+        // ২. বর্তমানে কতজন আছে তা দেখার জন্য ছোট লিস্ট লোড করা
+        async function loadPreviewList() {
+            const q = query(collection(db, "teachers"), orderBy("order", "desc"));
+            const querySnapshot = await getDocs(q);
+            const listDiv = document.getElementById('current-list');
+            listDiv.innerHTML = "";
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                listDiv.innerHTML += `
+                    <div class="teacher-item">
+                        <span><b>${data.name}</b> - ${data.designation}</span>
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                `;
+            });
+        }
+
+        window.onload = loadPreviewList;
+    </script>
+</body>
+</html>
