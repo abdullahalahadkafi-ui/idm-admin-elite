@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDM Admin Elite | শিক্ষক পোর্টাল</title>
+    <link rel="icon" href="red-favicon.png"> <!-- লাল লোগো -->
+    <link rel="manifest" href="admin-manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root { --admin-red: #b91c1c; --dark: #0f172a; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--dark); color: white; text-align: center; padding-top: 100px; }
+        .auth-card { background: rgba(255,255,255,0.05); padding: 50px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); max-width: 450px; margin: auto; }
+        .btn-google { background: white; color: #000; padding: 15px 30px; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 10px; margin: 30px auto; }
+        #status-msg { color: #f87171; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <i class="fas fa-user-shield fa-4x" style="color: var(--admin-red);"></i>
+        <h2 style="margin-top: 20px;">IDM Admin Elite</h2>
+        <p>শুধুমাত্র শিক্ষকদের জন্য সংরক্ষিত পোর্টাল</p>
+
+        <div id="login-section">
+            <button class="btn-google" onclick="login()">
+                <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20">
+                গুগল দিয়ে প্রবেশ করুন
+            </button>
+        </div>
+
+        <div id="status-msg"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = { /* তোমার কনফিগ */ };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        window.login = () => {
+            signInWithPopup(auth, provider).then(async (res) => {
+                const user = res.user;
+                const userRef = doc(db, "admin_users", user.uid);
+                const snap = await getDoc(userRef);
+
+                if (!snap.exists()) {
+                    // প্রথমবার লগইন করলে ফর্ম পেজে পাঠাবে
+                    window.location.href = "teacher-onboarding.html";
+                } else {
+                    const data = snap.data();
+                    if (data.status === "approved") {
+                        window.location.href = "dashboard.html";
+                    } else {
+                        document.getElementById('status-msg').innerText = "আপনার অ্যাকাউন্টটি এখনো অনুমোদনের অপেক্ষায় আছে।";
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>
