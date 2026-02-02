@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>মাস্টার কন্ট্রোল | শিক্ষকদের অনুমোদন</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #f1f5f9; }
+        .list-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
+        .btn-approve { background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="list-card">
+        <h2>নতুন শিক্ষক আবেদনের তালিকা</h2>
+        <table id="teacher-table">
+            <thead>
+                <tr>
+                    <th>নাম</th>
+                    <th>ইমেইল</th>
+                    <th>পদবী</th>
+                    <th>অ্যাকশন</th>
+                </tr>
+            </thead>
+            <tbody id="list-body"></tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        // Firebase Setup...
+        import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        const db = getFirestore(app);
+
+        async function loadPending() {
+            const querySnapshot = await getDocs(collection(db, "admin_users"));
+            const body = document.getElementById('list-body');
+            body.innerHTML = "";
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                if(data.status === "pending") {
+                    body.innerHTML += `
+                        <tr>
+                            <td>${data.name}</td>
+                            <td>${data.email}</td>
+                            <td>${data.designation}</td>
+                            <td><button class="btn-approve" onclick="approveUser('${docSnap.id}')">অনুমোদন দিন</button></td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        window.approveUser = async (uid) => {
+            await updateDoc(doc(db, "admin_users", uid), { status: "approved" });
+            alert("শিক্ষক অনুমোদিত হয়েছে!");
+            loadPending();
+        }
+        loadPending();
+    </script>
+</body>
+</html>
