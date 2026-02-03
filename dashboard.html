@@ -1,223 +1,99 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>মাস্টার ড্যাশবোর্ড | IDM Admin Elite</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, addDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <style>
-        :root { --p-green: #006a4e; --admin-red: #b91c1c; --bg: #0f172a; --white: #fff; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Hind Siliguri', sans-serif; background: #f0f2f5; display: flex; color: #1e293b; min-height: 100vh; }
+    const firebaseConfig = {
+        apiKey: "AIzaSyCTxt82Z4KRW425eYAU-WkVJbmUu1Vcy58",
+        authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+        projectId: "ispahani-madrasah-portal",
+        storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+        messagingSenderId: "501627545319",
+        appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+    };
 
-        /* --- LOADING SCREEN --- */
-        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid var(--admin-red); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        /* --- SIDEBAR --- */
-        .sidebar { width: 280px; background: #111827; color: white; position: fixed; height: 100vh; padding: 25px; z-index: 1000; }
-        .sidebar h2 { font-family: 'Orbitron'; font-size: 18px; color: var(--admin-red); text-align: center; margin-bottom: 35px; border-bottom: 1px solid #374151; padding-bottom: 15px; }
-        .nav-item { padding: 12px 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 5px; color: #9ca3af; transition: 0.3s; font-weight: 600; font-size: 15px; }
-        .nav-item:hover, .nav-item.active { background: var(--admin-red); color: white; }
+    // --- লুপ বন্ধ করার আসল লজিক ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // ১. ডাটাবেজ থেকে ইউজারের তথ্য আনা
+            const userRef = doc(db, "admin_users", user.uid);
+            const snap = await getDoc(userRef);
 
-        /* --- MAIN CONTENT --- */
-        .main-content { margin-left: 280px; width: calc(100% - 280px); padding: 30px; }
-        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px 30px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-info img { width: 35px; border-radius: 50%; border: 2px solid var(--p-green); }
-
-        .tab-section { display: none; }
-        .tab-section.active { display: block; animation: fadeIn 0.5s; }
-
-        .admin-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #e5e7eb; margin-bottom: 25px; }
-        .admin-card h2 { font-size: 20px; color: var(--p-green); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: left; font-size: 14px; }
-        th { background: #f8fafc; font-weight: 700; color: #111; }
-        .btn-approve { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-delete { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
-
-        input, textarea, select { width: 100%; padding: 12px; border: 1.5px solid #f1f5f9; border-radius: 10px; outline: none; margin-bottom: 15px; font-family: inherit; }
-        .btn-save { background: var(--p-green); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        @media (max-width: 900px) {
-            .sidebar { left: -300px; }
-            .sidebar.active { left: 0; }
-            .main-content { margin-left: 0; width: 100%; padding: 15px; }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        <h3>সিকিউরিটি চেক চলছে...</h3>
-    </div>
-
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <h2>IDM ADMIN</h2>
-        <div class="nav-item active" onclick="showTab('notice', this)"><i class="fas fa-bullhorn"></i> নোটিশ বোর্ড</div>
-        <div class="nav-item" onclick="showTab('results', this)"><i class="fas fa-poll"></i> রেজাল্ট এন্ট্রি</div>
-        <div class="nav-item" onclick="showTab('students', this)"><i class="fas fa-user-graduate"></i> ছাত্র তালিকা</div>
-        
-        <!-- Master Tab -->
-        <div id="master-tab" class="nav-item" style="display:none; border: 1px dashed var(--admin-red);" onclick="showTab('master', this)">
-            <i class="fas fa-user-check"></i> মাস্টার কন্ট্রোল
-        </div>
-
-        <div class="nav-item" style="margin-top: 50px; color: #f87171;" onclick="logout()">
-            <i class="fas fa-power-off"></i> লগআউট
-        </div>
-    </aside>
-
-    <main class="main-content">
-        <div class="header-bar">
-            <h1 id="tab-name">নোটিশ বোর্ড</h1>
-            <div class="user-info">
-                <img id="u-img" src="">
-                <b id="u-name">---</b>
-            </div>
-        </div>
-
-        <!-- নোটিশ প্যানেল -->
-        <div id="notice" class="tab-section active">
-            <div class="admin-card">
-                <h2>নতুন নোটিশ পাবলিশ</h2>
-                <input type="text" id="nTitle" placeholder="শিরোনাম">
-                <textarea id="nDetails" rows="4" placeholder="বিস্তারিত তথ্য..."></textarea>
-                <button class="btn-save" onclick="saveNotice()">সার্ভারে আপডেট করুন</button>
-            </div>
-        </div>
-
-        <!-- মাস্টার কন্ট্রোল (Teacher Approval) -->
-        <div id="master" class="tab-section">
-            <div class="admin-card">
-                <h2 style="color:var(--admin-red)">পেন্ডিং শিক্ষক আবেদন</h2>
-                <div style="overflow-x:auto;">
-                    <table>
-                        <thead>
-                            <tr><th>নাম</th><th>ইমেইল</th><th>পদবী</th><th>অ্যাকশন</th></tr>
-                        </thead>
-                        <tbody id="pending-teachers-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ছাত্র তালিকা -->
-        <div id="students" class="tab-section">
-            <div class="admin-card">
-                <h2>নিবন্ধিত ছাত্রদের তথ্য</h2>
-                <div id="student-list" style="overflow-x:auto;">লোড হচ্ছে...</div>
-            </div>
-        </div>
-
-    </main>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, addDoc, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCTxt82Z4KRW425eYAU-WkVJbmUu1Vcy58",
-            authDomain: "ispahani-madrasah-portal.firebaseapp.com",
-            projectId: "ispahani-madrasah-portal",
-            storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
-            messagingSenderId: "501627545319",
-            appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // --- স্মার্ট অথেন্টিকেশন লজিক (Loop Fix) ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const docRef = doc(db, "admin_users", user.uid);
-                const snap = await getDoc(docRef);
-
-                if (snap.exists()) {
-                    const userData = snap.data();
-                    if (userData.status === "approved") {
-                        // সবকিছু ঠিক আছে, লোডিং স্ক্রিন সরিয়ে ড্যাশবোর্ড দেখাও
-                        document.getElementById('loading-screen').style.display = "none";
-                        document.getElementById('u-name').innerText = userData.name;
-                        document.getElementById('u-img').src = user.photoURL;
-                        
-                        // মাস্টার অ্যাডমিন চেক
-                        if (userData.email === "abdullahalahadkafi@gmail.com" || userData.designation.toLowerCase().includes("super")) {
-                            document.getElementById('master-tab').style.display = "flex";
-                            loadPendingTeachers();
-                        }
-                    } else {
-                        // যদি অনুমোদিত না হয়
-                        document.body.innerHTML = `<div style="text-align:center; padding:100px; color:red;"><h1>অনুমোদনের অপেক্ষায়!</h1><p>সুপারের অনুমোদনের পর আবার চেষ্টা করুন।</p><br><button onclick="location.reload()">Refresh</button></div>`;
+            if (snap.exists()) {
+                const userData = snap.data();
+                
+                if (userData.status === "approved") {
+                    // ২. শুধুমাত্র এপ্রুভ হলেই ড্যাশবোর্ড দেখাবে
+                    document.getElementById('loading-screen').style.display = "none";
+                    document.getElementById('u-name').innerText = userData.name;
+                    document.getElementById('u-img').src = user.photoURL;
+                    
+                    // ৩. মাস্টার অ্যাডমিন চেক (সরাসরি তোমার ইমেইল দিয়ে)
+                    if (user.email === "abdullahalahadkafi@gmail.com" || userData.designation.toLowerCase().includes("super")) {
+                        document.getElementById('master-tab').style.display = "flex";
+                        loadPendingTeachers();
                     }
                 } else {
-                    window.location.href = "teacher-onboarding.html";
+                    // এপ্রুভ না হলে তাকে ওয়েটিং স্ক্রিনে আটকে রাখবে (ইনডেক্সে পাঠাবে না)
+                    showWaitScreen();
                 }
             } else {
-                // ইউজার না থাকলে লগইন পেজে পাঠাবে
-                window.location.href = "index.html"; 
+                // যদি একাউন্টই না থাকে তবে রেজিস্ট্রেশনে পাঠাবে
+                window.location.href = "teacher-onboarding.html";
             }
-        });
+        } else {
+            // লগইন করা না থাকলে শুধু তখনই ইনডেক্সে পাঠাবে
+            window.location.href = "index.html";
+        }
+    });
 
-        // --- মাস্টার কন্ট্রোল: টিচার এপ্রুভাল ---
-        function loadPendingTeachers() {
-            const q = query(collection(db, "admin_users"), where("status", "==", "pending"));
-            onSnapshot(q, (snapshot) => {
-                const body = document.getElementById('pending-teachers-body');
-                body.innerHTML = "";
-                snapshot.forEach((userDoc) => {
-                    const d = userDoc.data();
-                    body.innerHTML += `
-                        <tr>
-                            <td>${d.name}</td>
-                            <td>${d.email}</td>
-                            <td>${d.designation}</td>
-                            <td>
-                                <button class="btn-approve" onclick="approveTeacher('${userDoc.id}')">Approve</button>
-                                <button class="btn-delete" onclick="deleteTeacher('${userDoc.id}')">Reject</button>
-                            </td>
-                        </tr>
-                    `;
-                });
+    // সুপারের জন্য টিচার এপ্রুভাল লজিক (রিয়েল টাইম)
+    function loadPendingTeachers() {
+        const q = query(collection(db, "admin_users"), where("status", "==", "pending"));
+        onSnapshot(q, (snapshot) => {
+            const body = document.getElementById('pending-teachers-body');
+            body.innerHTML = "";
+            snapshot.forEach((userDoc) => {
+                const d = userDoc.data();
+                body.innerHTML += `
+                    <tr>
+                        <td>${d.name}</td>
+                        <td>${d.email}</td>
+                        <td><button class="btn-approve" onclick="approveTeacher('${userDoc.id}')">Approve Now</button></td>
+                    </tr>
+                `;
             });
-        }
+        });
+    }
 
-        window.approveTeacher = async (uid) => {
-            await updateDoc(doc(db, "admin_users", uid), { status: "approved" });
-            alert("শিক্ষক অনুমোদিত হয়েছে!");
-        }
+    window.approveTeacher = async (uid) => {
+        const userRef = doc(db, "admin_users", uid);
+        await updateDoc(userRef, { status: "approved" });
+        alert("শিক্ষক অনুমোদিত হয়েছে! উনি এখন ড্যাশবোর্ড ব্যবহার করতে পারবেন।");
+    }
 
-        window.deleteTeacher = async (uid) => {
-            if(confirm("আবেদনটি বাতিল করতে চান?")) {
-                await deleteDoc(doc(db, "admin_users", uid));
-            }
-        }
+    function showWaitScreen() {
+        document.getElementById('loading-screen').innerHTML = `
+            <div style="text-align:center; color:white;">
+                <i class="fas fa-clock fa-4x" style="color:#ffc107"></i>
+                <h1 style="margin-top:20px;">অনুমোদনের অপেক্ষায়...</h1>
+                <p>সুপারিনটেনডেন্ট অনুমোদন দিলে আপনি অটোমেটিক ড্যাশবোর্ডে ঢুকতে পারবেন।</p>
+                <br><button onclick="location.reload()" style="padding:10px 20px; cursor:pointer;">Refresh Page</button>
+            </div>
+        `;
+    }
 
-        // --- ট্যাব সুইচ ও অন্যান্য ---
-        window.showTab = (id, el) => {
-            document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-            document.getElementById('tab-name').innerText = el.innerText;
-        }
+    window.showTab = (id, el) => {
+        document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        el.classList.add('active');
+        document.getElementById('tab-name').innerText = el.innerText;
+    }
 
-        window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
-    </script>
-</body>
-</html>
+    window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
+</script>
