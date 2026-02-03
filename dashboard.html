@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>মাস্টার ড্যাশবোর্ড | IDM Admin Elite</title>
+    
+    <!-- Premium Resources -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <style>
+        :root { --p-green: #006a4e; --admin-red: #b91c1c; --bg: #f0f2f5; --white: #fff; --text: #1e293b; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); display: flex; color: var(--text); }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 280px; height: 100vh; background: #111827; position: fixed; color: white; padding: 25px; z-index: 1000; transition: 0.3s; }
+        .sidebar h2 { font-family: 'Orbitron'; font-size: 18px; color: var(--admin-red); text-align: center; margin-bottom: 40px; border-bottom: 1px solid #374151; padding-bottom: 15px; }
+        
+        .nav-item { padding: 14px 18px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; color: #9ca3af; transition: 0.3s; font-weight: 600; }
+        .nav-item i { font-size: 18px; width: 25px; }
+        .nav-item:hover, .nav-item.active { background: var(--admin-red); color: white; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { margin-left: 280px; width: 100%; padding: 40px; min-height: 100vh; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .user-profile { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .user-profile img { width: 35px; border-radius: 50%; }
+
+        .tab-section { display: none; }
+        .tab-section.active { display: block; animation: fadeIn 0.5s; }
+
+        /* Cards */
+        .admin-card { background: var(--white); padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #e5e7eb; }
+        .admin-card h2 { font-size: 22px; color: #111; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        
+        /* Inputs */
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 5px; color: #64748b; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1.5px solid #f1f5f9; border-radius: 10px; outline: none; font-size: 15px; font-family: inherit; }
+        
+        .btn-save { background: var(--admin-red); color: white; padding: 15px; border: none; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.3s; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; font-size: 14px; }
+        th { background: #f8fafc; color: #111; }
+        .status-badge { padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+        .bg-pending { background: #fef3c7; color: #92400e; }
+        .bg-approved { background: #dcfce7; color: #15803d; }
+
+        /* Access Denied Overlay */
+        #access-denied { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+
+        @media (max-width: 900px) {
+            .sidebar { left: -300px; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Access Denied Screen -->
+    <div id="access-denied">
+        <i class="fas fa-user-clock fa-5x" style="color:var(--admin-red); margin-bottom:20px;"></i>
+        <h1>অনুমোদনের অপেক্ষায়...</h1>
+        <p>আপনার অ্যাকাউন্টটি এখনো সুপারিনটেনডেন্ট কর্তৃক অনুমোদিত হয়নি।<br>অনুমোদন পেলে এই পেজটি অটোমেটিক লোড হবে।</p>
+        <br><button onclick="location.reload()" class="btn-save" style="width:auto; padding:10px 30px;">রিফ্রেশ দিন</button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <h2>IDM ADMIN</h2>
+        <div class="nav-item active" onclick="showTab('notice', this)"><i class="fas fa-bullhorn"></i> নোটিশ বোর্ড</div>
+        <div class="nav-item" onclick="showTab('results', this)"><i class="fas fa-poll"></i> রেজাল্ট এন্ট্রি</div>
+        <div id="master-tab" class="nav-item" style="display:none;" onclick="showTab('master', this)"><i class="fas fa-user-check"></i> শিক্ষক অনুমোদন</div>
+        <div class="nav-item" style="margin-top: 50px; color: var(--admin-red);" onclick="logout()"><i class="fas fa-power-off"></i> লগআউট</div>
+    </aside>
+
+    <div class="main-content">
+        <div class="header-bar">
+            <h1 id="tab-title">ড্যাশবোর্ড</h1>
+            <div class="user-profile">
+                <img id="user-img" src="">
+                <span id="user-name">লোড হচ্ছে...</span>
+            </div>
+        </div>
+
+        <!-- ১. নোটিশ ম্যানেজমেন্ট -->
+        <div id="notice" class="tab-section active">
+            <div class="admin-card">
+                <h2><i class="fas fa-plus-circle"></i> নতুন নোটিশ দিন</h2>
+                <div class="form-group">
+                    <label>শিরোনাম</label>
+                    <input type="text" id="nTitle" placeholder="নোটিশের নাম">
+                </div>
+                <div class="form-group">
+                    <label>বিস্তারিত তথ্য</label>
+                    <textarea id="nDetails" rows="5" placeholder="এখানে বিস্তারিত লিখুন..."></textarea>
+                </div>
+                <button class="btn-save" onclick="saveNotice()">পাবলিশ করুন</button>
+            </div>
+        </div>
+
+        <!-- ২. রেজাল্ট ম্যানেজমেন্ট -->
+        <div id="results" class="tab-section">
+            <div class="admin-card">
+                <h2><i class="fas fa-graduation-cap"></i> স্টুডেন্ট রেজাল্ট আপলোড</h2>
+                <p style="color:#666; margin-bottom:20px;">শিক্ষার্থীরা সরাসরি ওয়েবসাইট থেকে রেজাল্ট দেখতে পারবে।</p>
+                <!-- রেজাল্ট ফর্ম এখানে আসবে -->
+                <button class="btn-save" style="background:var(--p-green)">রেজাল্ট পোর্টাল ওপেন করুন</button>
+            </div>
+        </div>
+
+        <!-- ৩. মাস্টার কন্ট্রোল (শুধুমাত্র আব্বু বা সুপারের জন্য) -->
+        <div id="master" class="tab-section">
+            <div class="admin-card">
+                <h2><i class="fas fa-users-cog"></i> শিক্ষক আবেদনের তালিকা</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>নাম</th>
+                            <th>ইমেইল</th>
+                            <th>পদবী</th>
+                            <th>অ্যাকশন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-list">
+                        <!-- ডাটাবেজ থেকে আসবে -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTxt82Z4KRW425eYAU-WkVJbmUu1Vcy58",
+            authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+            projectId: "ispahani-madrasah-portal",
+            storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+            messagingSenderId: "501627545319",
+            appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ১. এক্সেস কন্ট্রোল ও প্রোফাইল লোড
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = doc(db, "admin_users", user.uid);
+                const snap = await getDoc(userRef);
+
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.status === "approved") {
+                        document.getElementById('user-name').innerText = data.name;
+                        document.getElementById('user-img').src = user.photoURL;
+                        
+                        // যদি সুপার বা অ্যাডমিন হয় তবেই মাস্টার ট্যাব দেখাবে
+                        if (data.designation.toLowerCase().includes("super") || data.email === "kafiahad83@gmail.com") {
+                            document.getElementById('master-tab').style.display = "flex";
+                            loadPendingTeachers();
+                        }
+                    } else {
+                        document.getElementById('access-denied').style.display = "flex";
+                    }
+                } else {
+                    window.location.href = "teacher-onboarding.html";
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        // ২. পেন্ডিং শিক্ষক লোড (শুধুমাত্র সুপারের জন্য)
+        function loadPendingTeachers() {
+            const q = query(collection(db, "admin_users"), where("status", "==", "pending"));
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('pending-list');
+                list.innerHTML = "";
+                snapshot.forEach((userDoc) => {
+                    const d = userDoc.data();
+                    list.innerHTML += `
+                        <tr>
+                            <td>${d.name}</td>
+                            <td>${d.email}</td>
+                            <td>${d.designation}</td>
+                            <td><button class="status-badge bg-approved" style="border:none; cursor:pointer;" onclick="approveTeacher('${userDoc.id}')">Approve</button></td>
+                        </tr>
+                    `;
+                });
+                if(snapshot.empty) list.innerHTML = "<tr><td colspan='4' style='text-align:center;'>কোনো আবেদন নেই।</td></tr>";
+            });
+        }
+
+        window.approveTeacher = async (uid) => {
+            await updateDoc(doc(db, "admin_users", uid), { status: "approved" });
+            alert("শিক্ষক অনুমোদিত হয়েছে!");
+        }
+
+        // ৩. নোটিশ সেভ ফাংশন
+        window.saveNotice = async () => {
+            const title = document.getElementById('nTitle').value;
+            const details = document.getElementById('nDetails').value;
+            if(!title || !details) return alert("তথ্য দিন!");
+            
+            try {
+                await addDoc(collection(db, "notices"), {
+                    title, details, time: serverTimestamp()
+                });
+                alert("নোটিশটি সফলভাবে পাবলিশ হয়েছে! ✅");
+                document.getElementById('nTitle').value = "";
+                document.getElementById('nDetails').value = "";
+            } catch (e) { alert(e.message); }
+        }
+
+        // ৪. ইউটিলিটি ফাংশন
+        window.showTab = (id, el) => {
+            document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+        };
+
+        window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
+    </script>
+</body>
+</html>
