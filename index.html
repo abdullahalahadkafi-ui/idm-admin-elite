@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আমার প্রোফাইল | IDM Admin Elite</title>
+    
+    <!-- Premium Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root { --p-green: #006a4e; --admin-red: #b91c1c; --bg: #f3f4f6; --white: #fff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); color: #1e293b; }
+
+        /* --- STICKY HEADER --- */
+        header { background: #fff; padding: 15px 8%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .logo { font-family: 'Poppins'; font-weight: 800; color: var(--admin-red); text-decoration: none; font-size: 20px; }
+
+        /* --- PROFILE UI --- */
+        .container { max-width: 800px; margin: 40px auto; padding: 0 15px; }
+        .profile-card { background: white; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); overflow: hidden; }
+        
+        .profile-cover { height: 150px; background: linear-gradient(to right, var(--admin-red), #7f1d1d); }
+        .profile-body { padding: 0 40px 40px; text-align: center; margin-top: -75px; }
+        
+        .user-img { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #fff; background: #eee; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .form-section { text-align: left; margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; border: 1.5px solid #f1f5f9; border-radius: 10px; outline: none; font-size: 15px; font-family: inherit; }
+        input:focus { border-color: var(--admin-red); background: #fff; }
+
+        .btn-save { background: var(--p-green); color: white; border: none; padding: 15px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 20px; font-size: 16px; }
+        .btn-save:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 106, 78, 0.2); }
+
+        @media (max-width: 600px) { .form-section { grid-template-columns: 1fr; } .profile-body { padding: 0 20px 30px; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="dashboard.html" class="logo">IDM ADMIN</a>
+        <div style="font-weight: bold; font-size: 14px; color: var(--p-green);"><i class="fas fa-user-circle"></i> টিচার প্রোফাইল</div>
+    </header>
+
+    <div class="container">
+        <div class="profile-card">
+            <div class="profile-cover"></div>
+            <div class="profile-body">
+                <img id="display-img" src="https://via.placeholder.com/150" class="user-img">
+                <h2 id="display-name" style="margin-top:15px;">লোড হচ্ছে...</h2>
+                <p id="display-role" style="color:var(--admin-red); font-weight:bold;">অফিসিয়াল অ্যাকাউন্ট</p>
+
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>আপনার নাম (পূর্ণাঙ্গ)</label>
+                        <input type="text" id="p-name" placeholder="উদা: মাওলানা আব্দুল হাই">
+                    </div>
+                    <div class="form-group">
+                        <label>পদবী</label>
+                        <input type="text" id="p-pos" placeholder="উদা: সিনিয়র শিক্ষক">
+                    </div>
+                    <div class="form-group">
+                        <label>মোবাইল নম্বর</label>
+                        <input type="tel" id="p-phone" placeholder="০১৮XXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>রক্তের গ্রুপ</label>
+                        <input type="text" id="p-blood" placeholder="O+">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>প্রোফাইল ছবির লিঙ্ক (Image URL)</label>
+                        <input type="text" id="p-img" placeholder="https://imgur.com/your-photo.jpg" oninput="document.getElementById('display-img').src = this.value">
+                        <small style="font-size:11px; color:#888;">* টিপস: PostImages.org এ ছবি আপলোড করে লিঙ্ক এখানে দিন।</small>
+                    </div>
+                </div>
+
+                <button class="btn-save" id="saveBtn">প্রোফাইল আপডেট করুন <i class="fas fa-save"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAT-lcLWb8A9iWJZI77-TJifcjabjSBahU",
+            authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+            projectId: "ispahani-madrasah-portal",
+            storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+            messagingSenderId: "501627545319",
+            appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUID = "";
+
+        // ১. লগইন চেক এবং তথ্য লোড
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUID = user.uid;
+                
+                // ডাটাবেজ থেকে তথ্য দেখা
+                const docRef = doc(db, "admin_users", user.uid);
+                const snap = await getDoc(docRef);
+
+                if (snap.exists()) {
+                    const d = snap.data();
+                    document.getElementById('display-name').innerText = d.name || user.displayName;
+                    document.getElementById('display-role').innerText = d.designation || "অফিসিয়াল অ্যাকাউন্ট";
+                    document.getElementById('display-img').src = d.photo || user.photoURL;
+
+                    // ফর্ম ইনপুট ভ্যালু
+                    document.getElementById('p-name').value = d.name || user.displayName;
+                    document.getElementById('p-pos').value = d.designation || "";
+                    document.getElementById('p-phone').value = d.phone || "";
+                    document.getElementById('p-blood').value = d.blood || "";
+                    document.getElementById('p-img').value = d.photo || user.photoURL;
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        // ২. প্রোফাইল আপডেট ফাংশন
+        document.getElementById('saveBtn').onclick = async () => {
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "আপডেট হচ্ছে...";
+            
+            const updatedData = {
+                name: document.getElementById('p-name').value,
+                designation: document.getElementById('p-pos').value,
+                phone: document.getElementById('p-phone').value,
+                blood: document.getElementById('p-blood').value,
+                photo: document.getElementById('p-img').value,
+                lastUpdate: new Date()
+            };
+
+            try {
+                await setDoc(doc(db, "admin_users", currentUID), updatedData, { merge: true });
+                alert("আপনার প্রোফাইল সফলভাবে আপডেট হয়েছে! ✅");
+                location.reload();
+            } catch (err) {
+                alert("এরর: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
