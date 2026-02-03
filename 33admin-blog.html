@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>নতুন পোস্ট | BoiBitan Admin Elite</title>
+    
+    <!-- Premium Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <style>
+        :root { --p-green: #006a4e; --admin-red: #b91c1c; --bg: #f0f2f5; --white: #fff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); color: #1e293b; }
+
+        /* --- HEADER --- */
+        header { background: #fff; padding: 15px 8%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .logo { font-family: 'Poppins'; font-weight: 800; color: var(--admin-red); text-decoration: none; font-size: 20px; }
+
+        .container { max-width: 700px; margin: 40px auto; padding: 0 15px; }
+        
+        /* --- POST CREATOR CARD --- */
+        .post-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        .post-card h2 { font-size: 22px; color: var(--p-green); margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+
+        /* User Identity (Auto-fetched) */
+        .user-identity { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding: 10px; background: #f8fafc; border-radius: 12px; }
+        .user-identity img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--p-green); }
+        .user-identity b { font-size: 16px; color: #334155; }
+        .user-identity span { font-size: 12px; color: #64748b; display: block; }
+
+        /* Input Form */
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #475569; }
+        input, textarea { width: 100%; padding: 15px; border: 1.5px solid #f1f5f9; border-radius: 12px; outline: none; font-size: 16px; font-family: inherit; transition: 0.3s; background: #fcfcfc; }
+        input:focus, textarea:focus { border-color: var(--p-green); background: #fff; box-shadow: 0 0 10px rgba(0, 106, 78, 0.05); }
+
+        .btn-publish { background: var(--p-green); color: white; padding: 16px; border: none; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.4s; font-size: 18px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-publish:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 106, 78, 0.2); background: #004d39; }
+
+        .info-card { background: #fffbeb; border-left: 5px solid #f59e0b; padding: 15px; border-radius: 10px; margin-bottom: 25px; font-size: 13px; color: #92400e; }
+
+        footer { text-align: center; padding: 40px; color: #94a3b8; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="dashboard.html" class="logo">IDM ADMIN</a>
+        <div style="font-weight: bold; font-size: 14px; color: var(--p-green);"><i class="fas fa-edit"></i> রাইটিং ড্যাশবোর্ড</div>
+    </header>
+
+    <div class="container">
+        <div class="info-card">
+            <i class="fas fa-info-circle"></i> <b>নির্দেশনা:</b> আপনার নাম এবং ছবি আপনার প্রোফাইল থেকে অটোমেটিক নেওয়া হবে। আপনি যদি তথ্য পরিবর্তন করতে চান, তবে প্রথমে "টিচার প্রোফাইল" পেজে গিয়ে তা আপডেট করুন।
+        </div>
+
+        <div class="post-card animate__animated animate__fadeIn">
+            <h2><i class="fas fa-pen-fancy"></i> নতুন কলাম লিখুন</h2>
+
+            <!-- অটো লোড হবে এই অংশটি -->
+            <div class="user-identity">
+                <img id="my-img" src="https://via.placeholder.com/45">
+                <div>
+                    <b id="my-name">লোড হচ্ছে...</b>
+                    <span id="my-role">আপনার পদবী</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>আর্টিকেলের শিরোনাম (Heading)</label>
+                <input type="text" id="postTitle" placeholder="যেমন: আদর্শ ছাত্রের গুণাবলী">
+            </div>
+
+            <div class="form-group">
+                <label>বিস্তারিত লেখা (Content)</label>
+                <textarea id="postBody" rows="10" placeholder="এখানে আপনার মূল্যবান লেখাটি শুরু করুন..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>ছবির লিঙ্ক (Image URL - অপশনাল)</label>
+                <input type="text" id="postImg" placeholder="https://imgur.com/example.jpg">
+                <small style="color:#888; font-size: 11px;">* ছবি না থাকলে বক্সে কোনো ফাঁকা জায়গা দেখাবে না (ফেসবুক স্টাইল)।</small>
+            </div>
+
+            <button class="btn-publish" id="publishBtn">পোস্ট পাবলিশ করুন <i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 ইস্পাহানি দাখিল মাদ্রাসা | ডিজাইন ও ডেভেলপমেন্ট: হাসিব আহমেদ (কাফি)
+    </footer>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAT-lcLWb8A9iWJZI77-TJifcjabjSBahU",
+            authDomain: "ispahani-madrasah-portal.firebaseapp.com",
+            projectId: "ispahani-madrasah-portal",
+            storageBucket: "ispahani-madrasah-portal.firebasestorage.app",
+            messagingSenderId: "501627545319",
+            appId: "1:501627545319:web:42409b2d8f614dfc3c6442"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let teacherData = null;
+
+        // ১. লগইন করা শিক্ষকের প্রোফাইল ডাটাবেজ থেকে আনা
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const docRef = doc(db, "admin_users", user.uid);
+                const snap = await getDoc(docRef);
+
+                if (snap.exists()) {
+                    teacherData = snap.data();
+                    if(teacherData.status === "approved") {
+                        document.getElementById('my-name').innerText = teacherData.name;
+                        document.getElementById('my-role').innerText = teacherData.designation;
+                        document.getElementById('my-img').src = teacherData.photo || user.photoURL;
+                    } else {
+                        alert("আপনার অ্যাকাউন্ট এখনো অনুমোদিত নয়!");
+                        window.location.href = "dashboard.html";
+                    }
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        // ২. পোস্ট পাবলিশ করার আসল ফাংশন
+        document.getElementById('publishBtn').onclick = async () => {
+            const title = document.getElementById('postTitle').value.trim();
+            const body = document.getElementById('postBody').value.trim();
+            const img = document.getElementById('postImg').value.trim();
+
+            if(!title || !body) { alert("শিরোনাম এবং বিস্তারিত লেখা অবশ্যই দিন!"); return; }
+
+            const btn = document.getElementById('publishBtn');
+            btn.innerText = "পাবলিশ হচ্ছে...";
+            btn.disabled = true;
+
+            try {
+                // 'posts' কালেকশনে ডাটা পাঠানো
+                await addDoc(collection(db, "posts"), {
+                    author: teacherData.name,
+                    authorPhoto: teacherData.photo || auth.currentUser.photoURL,
+                    authorRole: teacherData.designation,
+                    uid: auth.currentUser.uid,
+                    text: `*${title}*\n\n${body}`, // টাইটেলকে বোল্ড স্টাইল দেওয়া
+                    imageUrl: img,
+                    time: serverTimestamp(),
+                    reacts: {}, // রিঅ্যাকশনের জন্য খালি ম্যাপ
+                    comments: [] // কমেন্টের জন্য খালি লিস্ট
+                });
+
+                alert("সাফল্য! আপনার কলামটি নিউজ ফিডে যুক্ত হয়েছে। ✅");
+                window.location.href = "../blog.html"; // ব্লগ পেজে নিয়ে যাবে
+            } catch (err) {
+                alert("ভুল হয়েছে: " + err.message);
+                btn.innerText = "পোস্ট পাবলিশ করুন";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
